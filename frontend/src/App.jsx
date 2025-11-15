@@ -1,59 +1,31 @@
+//App.jsx
+import { useState } from "react";
+import axios from "axios";
+import "./App.css"; // reuse your existing styles for background, container, etc.
 
-import { useState, useEffect } from "react";
-import "./App.css";
-import Goal from "./Goal.jsx"
+export default function Goal({ user, setUser, onGoalSaved }) {
+  const [goal, setGoal] = useState(user.goal || "");
 
-function App({ user, setUser }) {
-  const [hearts, setHearts] = useState(3); // 3 = full health
-  const [checkboxChecked, setCheckboxChecked] = useState(false);
+  const saveGoal = async () => {
+    try {
+      const res = await axios.put(`http://localhost:3000/users/${user.id}`, {
+        goal,
+      });
 
-   // Function to map hearts to image paths
-  const getHeartsImage = (hearts) => {
-    switch (hearts) {
-      case 3: return "/hearts_3hearts-removebg-preview.png";
-      case 2: return "/hearts_2hearts-removebg-preview.png";
-      case 1: return "/hearts_1heart-removebg-preview.png";
-      case 0: return "/hearts_0hearts-removebg-preview.png";
-      default: return "/hearts_3hearts-removebg-preview.png";
+      setUser(res.data);
+      localStorage.setItem("user", JSON.stringify(res.data));
+
+      // Notify App to switch page to tracker
+      onGoalSaved();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update goal");
     }
   };
-
-  // Determine sheep image based on hearts
-  const getSheepImage = () => {
-    switch (hearts) {
-      case 3:
-        return "/sheep1_happy-removebg-preview.png";
-      case 2:
-        return "/sheep2_annoyed-removebg-preview.png";
-      case 1:
-        return "/sheep3_sick-removebg-preview.png";
-      case 0:
-        return "/sheep4_dead-removebg-preview.png";
-      default:
-        return "/sheep1_happy-removebg-preview.png";
-    }
-  };
-
-  // Handle daily checkbox
-    const handleCheckbox = () => setCheckboxChecked(true);
-
-
-  // Lose heart if checkbox not checked in time
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!checkboxChecked && hearts > 0) {
-        setHearts(prev => prev - 1);
-        alert("You missed your goal! Heart lost.");
-      }
-      // Reset checkbox for next cycle
-      setCheckboxChecked(false);
-    }, 10000); // every 10 seconds
-
-    return () => clearInterval(interval); // cleanup on unmount
-  }, [checkboxChecked, hearts]);
 
   return (
     <div className="app-container">
+      {/* Background image from App.css */}
       <img
         src="/background_day.png"
         className="background-image"
@@ -61,33 +33,34 @@ function App({ user, setUser }) {
       />
 
       <div className="content">
-        <h1 className="goal-title">Goal Tracker</h1>
+        <h1 className="goal-title">Set Your Goal</h1>
 
-        {/* Goal input */}
-        <Goal user={user} setUser={setUser} />
-
-        {/* Hearts */}
-        <img
-          src={getHeartsImage(hearts)}
-          className="hearts"
-          alt="health bar"
+        <input
+          type="text"
+          placeholder="Enter your goal"
+          value={goal}
+          onChange={(e) => setGoal(e.target.value)}
+          style={{
+            padding: "10px",
+            fontSize: "1.2rem",
+            borderRadius: "8px",
+            width: "300px",
+            marginBottom: "10px",
+          }}
         />
 
-        {/* Sheep */}
-        <img src={getSheepImage()} className="sheep" alt="sheep" />
-
-        {/* Daily checkbox */}
-        <label className="checkbox-container">
-          <input
-            type="checkbox"
-            checked={checkboxChecked}
-            onChange={handleCheckbox}
-          />
-          I worked on my goal today
-        </label>
+        <button
+          onClick={saveGoal}
+          style={{
+            padding: "10px 20px",
+            fontSize: "1.2rem",
+            borderRadius: "8px",
+            cursor: "pointer",
+          }}
+        >
+          Save Goal
+        </button>
       </div>
     </div>
   );
 }
-
-export default App;

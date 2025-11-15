@@ -1,9 +1,8 @@
-// Goal.jsx
 import { useState } from "react";
-import "./App.css";
 import axios from "axios";
+import "./App.css"; // reuse your existing styles for background, container, etc.
 
-export default function Goal({ user, setUser }) {
+export default function Goal({ user, setUser, onGoalSaved }) {
   const [goal, setGoal] = useState(user.goal || "");
 
   const saveGoal = async () => {
@@ -14,7 +13,9 @@ export default function Goal({ user, setUser }) {
 
       setUser(res.data);
       localStorage.setItem("user", JSON.stringify(res.data));
-      alert("Goal updated!");
+
+      // Notify App to switch page to tracker
+      onGoalSaved();
     } catch (err) {
       console.error(err);
       alert("Failed to update goal");
@@ -22,15 +23,43 @@ export default function Goal({ user, setUser }) {
   };
 
   return (
-    <div className="goal-container">
-      <h2>Your Goal</h2>
-      <input
-        type="text"
-        placeholder="Enter your goal"
-        value={goal}
-        onChange={(e) => setGoal(e.target.value)}
+    <div className="app-container">
+      {/* Background image from App.css */}
+      <img
+        src="/background_day.png"
+        className="background-image"
+        alt="background"
       />
-      <button onClick={saveGoal}>Save Goal</button>
+
+      <div className="content">
+        <h1 className="goal-title">Set Your Goal</h1>
+
+        <input
+          type="text"
+          placeholder="Enter your goal"
+          value={goal}
+          onChange={(e) => setGoal(e.target.value)}
+          style={{
+            padding: "10px",
+            fontSize: "1.2rem",
+            borderRadius: "8px",
+            width: "300px",
+            marginBottom: "10px",
+          }}
+        />
+
+        <button
+          onClick={saveGoal}
+          style={{
+            padding: "10px 20px",
+            fontSize: "1.2rem",
+            borderRadius: "8px",
+            cursor: "pointer",
+          }}
+        >
+          Save Goal
+        </button>
+      </div>
     </div>
   );
 }
