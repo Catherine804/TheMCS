@@ -6,7 +6,8 @@ import Login from './login.jsx'
 
 function Root() {
   const [user, setUser] = useState(null); //no user yet -> show login
-
+  const [loading, setLoading] = useState(true);
+  
   // if no user, render login
   if (!user) {
     return <Login onLogin={setUser} />;
