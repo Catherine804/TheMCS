@@ -17,7 +17,7 @@ html, body, #root {
   justify-content: center;
 }
 
-/* Background image stretched to fill container (Option 1 style) */
+/* Background image stretched to fill container */
 .bg-img {
   position: absolute;
   top: 0;

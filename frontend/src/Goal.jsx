@@ -1,5 +1,6 @@
 // Goal.jsx
 import { useState } from "react";
+import "./App.css";
 import axios from "axios";
 
 export default function Goal({ user, setUser }) {
@@ -21,8 +22,8 @@ export default function Goal({ user, setUser }) {
   };
 
   return (
-    <div>
-      <h2>Set your goal</h2>
+    <div className="goal-container">
+      <h2>Your Goal</h2>
       <input
         type="text"
         placeholder="Enter your goal"
