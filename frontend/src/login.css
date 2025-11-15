@@ -1,73 +1,32 @@
-/* Make the html/body fill the viewport */
-html, body, #root {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  font-family: Arial, sans-serif;
-}
+/* login.css */
 
-/* Container fills viewport */
-.login-container {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Background image stretched to fill container */
-.bg-img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: fill;   /* stretches width & height exactly like background-size: 100% 100% */
-  z-index: -1;        /* send behind the login form */
-}
-
-/* Login form sits above the image */
 .login-form {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: white;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 40px;
+  border-radius: 12px;
+  text-align: center;
+  width: 320px; /* form width */
 }
 
-/* Input & button styling */
-.login-form input {
-  padding: 12px 15px;
-  font-size: 1.2rem;
+.login-form input,
+.login-form button {
+  width: 100%;          /* full width of form */
+  padding: 12px 0;      /* same vertical padding */
+  margin: 12px 0;       /* space between input and button */
   border-radius: 8px;
+  font-size: 1.2rem;
   border: none;
-  margin-bottom: 20px;
-  width: 250px;
-  outline: none;
+  box-sizing: border-box; /* ensure padding doesn't exceed width */
 }
 
 .login-form button {
-  padding: 12px 25px;
-  font-size: 1.2rem;
-  border-radius: 8px;
-  border: none;
+  background-color: #4caf50;
+  color: white;
   cursor: pointer;
-  font-weight: bold;
-  background-color: #61dafb;
-  color: #282c34;
-  transition: background-color 0.2s ease;
 }
 
-.login-form button:hover {
-  background-color: #21a1f1;
-}
-
-/* Error message */
 .login-form p {
-  margin-top: 15px;
-  font-size: 1rem;
-  color: #ff4d4f;
+  color: #ff5555;
+  margin-top: 10px;
+  font-weight: bold;
 }
