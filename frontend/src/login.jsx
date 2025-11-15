@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import "./index.css";
+import "./login.css";
 
 export default function Login({ onLogin }) {
   const [username, setUsername] = useState("");
@@ -35,16 +36,23 @@ export default function Login({ onLogin }) {
 
   return (
     <div className="login-container">
-      <h1>Login</h1>
-      <input
-        type="text"
-        placeholder="Enter your username"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+      <img
+        src="/background_day.png"
+        className="bg-img"
+        alt="background"
       />
-      <button onClick={handleLogin}>Login</button>
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      <div className="login-form">
+        <h1>Login</h1>
+        <input
+          type="text"
+          placeholder="Enter your username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+        />
+        <button onClick={handleLogin}>Login</button>
+        {error && <p>{error}</p>}
+      </div>
     </div>
   );
 }
