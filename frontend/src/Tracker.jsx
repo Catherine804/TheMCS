@@ -24,30 +24,51 @@ export default function Tracker({ user, setUser }) {
       default: return "/sheep1_happy-removebg-preview.png";
     }
   };
+    
+  const handleCheckbox = () => {
+    // User completed their goal
+    setCheckboxChecked(true);
 
-  const handleCheckbox = () => setCheckboxChecked(true);
+    // Restore 1 heart if hearts < 3
+    setHearts((prev) => (prev < 3 ? prev + 1 : prev));
+  };
 
+  
   // Heart-loss timer (demo 10s = 1 day)
   useEffect(() => {
     const interval = setInterval(() => {
-      if (!checkboxChecked && hearts > 0) setHearts(prev => prev - 1);
-      setCheckboxChecked(false); // reset for next cycle
-    }, 10000);
-
+      if (!checkboxChecked && hearts > 0) {
+        // Lose a heart if user missed the goal
+        setHearts(prev => prev - 1);
+        alert("You missed your goal! Heart lost.");
+      }
+      // Always reset checkbox for next cycle
+      setCheckboxChecked(false);
+    }, 10000); // every 10 seconds
+  
     return () => clearInterval(interval);
   }, [checkboxChecked, hearts]);
+  
 
   return (
     <div className="content">
       <h1 className="goal-title">{user.goal}</h1>
 
+      {/* Hearts image */}
       <img
         src={getHeartsImage(hearts)}
         className="hearts"
         alt="health bar"
       />
-      <img src={getSheepImage()} className="sheep" alt="sheep" />
 
+      {/* Sheep image */}
+      <img
+        src={getSheepImage()}
+        className="sheep"
+        alt="sheep"
+      />
+
+      {/* Daily checkbox */}
       <label className="checkbox-container">
         <input
           type="checkbox"

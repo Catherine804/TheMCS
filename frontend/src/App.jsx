@@ -1,4 +1,3 @@
-//App.jsx
 import { useState } from "react";
 import axios from "axios";
 import "./App.css"; // reuse your existing styles for background, container, etc.
