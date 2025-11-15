@@ -10,7 +10,7 @@ datasource db {
 
 model User {
   id        Int     @id @default(autoincrement())
-  user_name String
+  user_name String  @unique
   goal      String
   completed Boolean  @default(false)
 }
