@@ -15,13 +15,13 @@ router.post("/", async (req, res) => {
   try {
     // Check if user exists
     let user = await prisma.user.findUnique({
-      where: { name: user_name },
+      where: { user_name },
     });
 
     // If not, create new user
     if (!user) {
       user = await prisma.user.create({
-        data: { name: user_name, goal: "" }, // goal empty for now
+        data: { user_name, goal: "" }, // goal empty for now
       });
     }
 

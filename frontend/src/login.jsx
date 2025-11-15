@@ -1,8 +1,11 @@
 import { useState } from "react";
 import axios from "axios";
+import "./index.css";
+import "./login.css";
 
 export default function Login({ onLogin }) {
   const [username, setUsername] = useState("");
+  const [error, setError] = useState("");
 
   const handleLogin = async () => {
     if (!username.trim()) return;
@@ -14,45 +17,42 @@ export default function Login({ onLogin }) {
 
       const user = res.data;
 
-      // Save user to browser
+      // Optional: check backend response
+      if (!user || !user.id) {
+        setError("Invalid login response from server.");
+        return;
+      }
+
+      // Save user locally
       localStorage.setItem("user", JSON.stringify(user));
 
-      // Notify parent component
+      // Notify parent to show App
       onLogin(user);
-    } catch (error) {
-      console.error("Login error:", error);
-      alert("Could not log in.");
+    } catch (err) {
+      console.error(err);
+      setError("Could not log in. Please try again.");
     }
   };
 
   return (
-    <div style={{ color: "white", fontSize: "1.5rem" }}>
-      <h1>Login</h1>
-
-      <input
-        style={{
-          padding: "10px",
-          fontSize: "1.2rem",
-          borderRadius: "8px",
-          marginRight: "10px",
-        }}
-        type="text"
-        placeholder="Enter your username"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
+    <div className="login-container">
+      <img
+        src="/background_day.png"
+        className="bg-img"
+        alt="background"
       />
-
-      <button
-        onClick={handleLogin}
-        style={{
-          padding: "10px 20px",
-          fontSize: "1.2rem",
-          borderRadius: "8px",
-          cursor: "pointer",
-        }}
-      >
-        Login
-      </button>
+      <div className="login-form">
+        <h1>Login</h1>
+        <input
+          type="text"
+          placeholder="Enter your username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+        />
+        <button onClick={handleLogin}>Login</button>
+        {error && <p>{error}</p>}
+      </div>
     </div>
   );
 }

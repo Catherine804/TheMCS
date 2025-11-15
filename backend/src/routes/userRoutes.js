@@ -4,26 +4,28 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 const router = express.Router();
 
+
+
 // ➜ Create user
 router.post("/", async (req, res) => {
   try {
-    const { name, goal } = req.body;
+    const { user_name } = req.body; // only username at login
 
-    const user = await prisma.user.create({
-      data: { name, goal },
+    if (user_name) return res.status(400).json({ message: "Username required" });
+
+    // Check if user exists
+    let user = await prisma.user.findUnique({
+      where: { user_name },
     });
 
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+    // If not, create user with empty goal
+    if (!user) {
+      user = await prisma.user.create({
+        data: { user_name, goal: "" },
+      });
+    }
 
-// ➜ Get all users
-router.get("/", async (req, res) => {
-  try {
-    const users = await prisma.user.findMany();
-    res.json(users);
+    res.json(user); // return the user object
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -45,6 +47,7 @@ router.put("/:id", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 
 // ➜ Delete user
 router.delete("/:id", async (req, res) => {
