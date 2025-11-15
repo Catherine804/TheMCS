@@ -11,8 +11,8 @@ export default function Login({ onLogin }) {
     if (!username.trim()) return;
 
     try {
-      const res = await axios.post("http://localhost:3000/auth", {
-        user_name: username,
+      const res = await axios.post("http://localhost:5000/auth", {
+      user_name: username,
       });
 
       const user = res.data;
@@ -29,10 +29,22 @@ export default function Login({ onLogin }) {
       // Notify parent to show App
       onLogin(user);
     } catch (err) {
-      console.error(err);
-      setError("Could not log in. Please try again.");
-    }
-  };
+          if (err.response) {
+            // Server responded with status code out of 2xx range
+            console.error("Backend error:", err.response.data);
+            setError(err.response.data.error || "Server returned an error.");
+          } else if (err.request) {
+            // Request was made but no response received (network error)
+            console.error("Network error:", err.message);
+            setError("Cannot reach server. Check your connection or if the server is running.");
+          } else {
+            // Something else happened
+            console.error("Error", err.message);
+            setError("An unexpected error occurred.");
+          }
+        }
+
+ };
 
   return (
     <div className="login-container">
