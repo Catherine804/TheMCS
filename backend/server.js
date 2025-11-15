@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { PrismaClient } from "@prisma/client";
+import userRoutes from "./src/routes/userRoutes.js";
+import authRoutes from "./src/routes/authRoutes.js";
 
 
 dotenv.config();
@@ -16,11 +18,19 @@ app.get("/", (req, res) => {
   res.send("Backend is running!");
 });
 
+app.use("/users", userRoutes);
+
+app.use("/auth", authRoutes);
+
+app.listen(3000, () => console.log("Server running on port 3000"));
+
+/**
 // New code:
 
 /**
  * GET /user/:id → fetch current pet state and tasks
- */
+
+
 app.get("/user/:id", async (req, res) => {
   const { id } = req.params;
   try {
@@ -40,7 +50,7 @@ app.get("/user/:id", async (req, res) => {
 
 /**
  * POST /user/:id/task → mark task complete for today
- */
+
 app.post("/user/:id/task", async (req, res) => {
   const { id } = req.params;
   const { description } = req.body;
@@ -75,7 +85,7 @@ app.post("/user/:id/task", async (req, res) => {
 
 /**
  * POST /user/:id/reset → reset hearts/daily tasks
- */
+
 app.post("/user/:id/reset", async (req, res) => {
   const { id } = req.params;
   try {
@@ -93,6 +103,5 @@ app.post("/user/:id/reset", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+*/
 
-
-app.listen(3000, () => console.log("Server running on port 3000"));
