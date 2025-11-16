@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import GoalArchive from "./GoalArchive.jsx";
 import "./App.css";
 
 export default function Goal({ user, setUser, onGoalSaved }) {
@@ -28,6 +29,13 @@ export default function Goal({ user, setUser, onGoalSaved }) {
     ? normalizeGoals(user.goals)
     : (user.goal ? normalizeGoals([user.goal]) : [{ text: "", frequency: "daily", interval: 10000, deadline: null }]);
   const [goals, setGoals] = useState(initialGoals);
+
+  // Archive state
+  const [showArchive, setShowArchive] = useState(false);
+  const [archivedGoals, setArchivedGoals] = useState(() => {
+    const saved = localStorage.getItem("archivedGoals");
+    return saved ? JSON.parse(saved) : [];
+  });
 
   // Update goals when user changes
   useEffect(() => {
@@ -127,6 +135,56 @@ export default function Goal({ user, setUser, onGoalSaved }) {
         className="background-image"
         alt="background"
       />
+
+      {/* Goal Archive Modal */}
+      <GoalArchive 
+        isOpen={showArchive}
+        onClose={() => setShowArchive(false)}
+        completedGoals={archivedGoals}
+      />
+
+      {/* Archive Box - Always visible in top-left */}
+      <div
+        onClick={() => setShowArchive(true)}
+        style={{
+          position: "fixed",
+          top: "15px",
+          left: "15px",
+          padding: "10px 15px",
+          backgroundColor: "transparent",
+          borderRadius: "12px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "10px",
+          cursor: "pointer",
+          animation: archivedGoals.length > 0 ? "bounce 2s ease-in-out infinite" : "none",
+          transition: "all 0.3s ease",
+          minWidth: "60px",
+          zIndex: 100,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "scale(1.1)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "scale(1)";
+        }}
+      >
+        <span style={{ 
+          fontSize: "2rem", 
+          filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5))"
+        }}>
+          📦
+        </span>
+        <span style={{ 
+          color: "white", 
+          textShadow: "2px 2px 4px black",
+          fontSize: "1.8rem",
+          fontWeight: "bold"
+        }}>
+          {archivedGoals.length}
+        </span>
+      </div>
 
       <div className="content">
         <h1 className="goal-title">Set Your Goals</h1>
