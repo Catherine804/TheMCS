@@ -95,36 +95,42 @@ export default function Goal({ user, setUser, onGoalSaved }) {
     }
 
     try {
-      // For now, save to localStorage (frontend-only)
-      // Later, your friend can connect this to the backend
+      // Save each goal to the backend
+      for (const goal of validGoals) {
+        const payload = {
+          userId: user.id,
+          title: goal.text,
+          description: "",
+          frequency: goal.frequency,
+          deadline: goal.deadline || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        };
+        
+        console.log("Sending payload:", payload);
+        console.log("User object:", user);
+        
+        const response = await axios.post("http://localhost:5000/goals", payload);
+        console.log("Response:", response.data);
+      }
+
+      // Update local user state
       const updatedUser = {
         ...user,
-        goals: validGoals,
-        // Keep backward compatibility with goal property
-        goal: validGoals[0].text
+        goals: validGoals
       };
 
       setUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-
-      // If backend is available, try to save there too
-      if (user.id) {
-        try {
-          await axios.put(`http://localhost:3000/users/${user.id}`, {
-            goals: validGoals,
-            goal: validGoals[0].text // backward compatibility
-          });
-        } catch (err) {
-          // Backend not available yet - that's okay for frontend-only work
-          console.log("Backend not available, saved locally only");
-        }
-      }
+      sessionStorage.setItem("user", JSON.stringify(updatedUser));
 
       // Notify App to switch page to tracker
       onGoalSaved();
     } catch (err) {
-      console.error(err);
-      alert("Failed to save goals");
+      console.error("Full error:", err);
+      console.error("Error response:", err.response);
+      if (err.response && err.response.data.error) {
+        alert(err.response.data.error);
+      } else {
+        alert("Failed to save goals. Make sure the backend is running.");
+      }
     }
   };
 

@@ -9,8 +9,6 @@ async function test() {
       data: { user_name: "test_user_" + Date.now() }
     });
     console.log("✓ User created successfully:", user);
-    
-    // Check schema
     console.log("✓ Prisma Client is using the NEW schema!");
   } catch (err) {
     console.error("✗ Error:", err.message);

@@ -10,7 +10,10 @@ export default function Login({ onLogin }) {
   const [error, setError] = useState("");
 
   const handleLogin = async () => {
-    if (!username.trim()) return;
+    if (!username.trim() || !password.trim()) {
+      setError("Please enter both username and password");
+      return;
+    }
 
     try {
       const res = await axios.post("http://localhost:5000/auth", {
@@ -26,8 +29,8 @@ export default function Login({ onLogin }) {
         return;
       }
 
-      // Save user locally
-      localStorage.setItem("user", JSON.stringify(user));
+    
+    sessionStorage.setItem("user", JSON.stringify(user));
 
       // Notify parent to show App
       onLogin(user);

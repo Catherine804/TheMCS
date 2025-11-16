@@ -1,7 +1,7 @@
+
 generator client {
   provider = "prisma-client-js"
 }
-
 
 datasource db {
   provider = "postgresql"
@@ -9,8 +9,38 @@ datasource db {
 }
 
 model User {
-  id        Int     @id @default(autoincrement())
-  user_name String  @unique
-  goal      String
-  completed Boolean  @default(false)
+  id        Int      @id @default(autoincrement())
+  user_name String   @unique
+  password  String   // Add this line
+  goals     Goal[]
+  createdAt DateTime @default(now())
 }
+
+model Goal {
+  id              Int       @id @default(autoincrement())
+  title           String
+  description     String?
+  frequency       String    // "daily", "once_week", "twice_week", "three_week", "four_week", "five_week", "six_week", "bi_weekly"
+  deadline        DateTime  // User's goal deadline
+  status          String    @default("active") // "active", "completed", "failed"
+  lastFed         DateTime  @default(now()) // Last time user worked on goal
+  lastCheckIn     DateTime  @default(now()) // Last weekly check-in
+  progressStatus  String    @default("in_progress") // "in_progress", "near_completion", "completed"
+  userId          Int
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime  @default(now())
+  completedAt     DateTime? // When goal was completed (for Hall of Fame)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

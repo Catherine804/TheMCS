@@ -1,4 +1,19 @@
 import express from "express";
+import { prisma } from "../../prisma/client.js";
+
+const router = express.Router();
+
+// User routes moved to authRoutes
+// This file can be used for future user-related endpoints
+
+export default router;
+
+
+
+
+
+
+/*import express from "express";
 import prisma from "../../prisma/client.js";
 
 const router = express.Router();
@@ -63,4 +78,4 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-export default router;
+export default router;*/
