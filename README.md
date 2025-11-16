@@ -1,11 +1,11 @@
-# SheepTrack
+# Sheep Track
 
 > **Virtual Pet Productivity Tracker App**  
 Helping people accomplish their goals with a virtual pet.
 ---
 
 ## Overview
-**SheepTrack** is a productivity app that motivates users to complete daily goals by caring for a virtual sheep. The sheep's mood and health reflect the user's progress: it is happy when goals are completed and sick when goals are missed.
+**Sheep Track** is a productivity app that motivates users to complete daily goals by caring for a virtual sheep. The sheep's mood and health reflect the user's progress: it is happy when goals are completed and sick when goals are missed.
 
 ---
 
