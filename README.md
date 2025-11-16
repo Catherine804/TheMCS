@@ -44,5 +44,4 @@ TheMCS/
 
 ```
 ## Note
-```
-SheepTrack uses a private database for demo purposes. Cloning this repository enables you to run the frontend and backend locally, however, the app will not have access to live user data. To test the full functionality, you would need to configure your own database and update the connection string in the .env file.
+Sheep Track uses a private database for demo purposes. Cloning this repository enables you to run the frontend and backend locally, however, the app will not have access to live user data. To test the full functionality, you would need to configure your own database and update the connection string in the .env file.
