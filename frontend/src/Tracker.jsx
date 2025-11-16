@@ -10,13 +10,14 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
     return userGoals.map(goal => {
       if (typeof goal === "string") {
         // Old format: convert to new format with default values
-        return { text: goal, frequency: "daily", interval: 10000 };
+        return { text: goal, frequency: "daily", interval: 10000, deadline: null };
       }
       // New format: ensure all fields exist
       return {
         text: goal.text || "",
         frequency: goal.frequency || "daily",
-        interval: goal.interval || 10000
+        interval: goal.interval || 10000,
+        deadline: goal.deadline || null
       };
     });
   };
@@ -282,6 +283,22 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
                 }}>
                   Goal {index + 1}: {goal.text}
                 </h3>
+
+                {/* Deadline display */}
+                {goal.deadline && (
+                  <div style={{ 
+                    color: "white", 
+                    textShadow: "1px 1px 2px black",
+                    fontSize: "0.9rem",
+                    textAlign: "center",
+                    marginBottom: "5px",
+                    padding: "5px 10px",
+                    backgroundColor: "rgba(255, 255, 255, 0.1)",
+                    borderRadius: "6px"
+                  }}>
+                    Deadline: {new Date(goal.deadline).toLocaleDateString()}
+                  </div>
+                )}
 
                 {/* Hearts image for this goal */}
                 <img

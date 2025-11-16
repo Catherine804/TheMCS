@@ -6,18 +6,19 @@ export default function Goal({ user, setUser, onGoalSaved }) {
   // Helper to normalize goals (handle both old string format and new object format)
   const normalizeGoals = (userGoals) => {
     if (!userGoals || userGoals.length === 0) {
-      return [{ text: "", frequency: "daily", interval: 10000 }];
+      return [{ text: "", frequency: "daily", interval: 10000, deadline: null }];
     }
     return userGoals.map(goal => {
       if (typeof goal === "string") {
         // Old format: convert to new format
-        return { text: goal, frequency: "daily", interval: 10000 };
+        return { text: goal, frequency: "daily", interval: 10000, deadline: null };
       }
       // New format: ensure all fields exist
       return {
         text: goal.text || "",
         frequency: goal.frequency || "daily",
-        interval: goal.interval || 10000
+        interval: goal.interval || 10000,
+        deadline: goal.deadline || null
       };
     });
   };
@@ -25,14 +26,14 @@ export default function Goal({ user, setUser, onGoalSaved }) {
   // Initialize goals from user.goals array or user.goal (for backward compatibility)
   const initialGoals = user.goals 
     ? normalizeGoals(user.goals)
-    : (user.goal ? normalizeGoals([user.goal]) : [{ text: "", frequency: "daily", interval: 10000 }]);
+    : (user.goal ? normalizeGoals([user.goal]) : [{ text: "", frequency: "daily", interval: 10000, deadline: null }]);
   const [goals, setGoals] = useState(initialGoals);
 
   // Update goals when user changes
   useEffect(() => {
     const userGoals = user.goals 
       ? normalizeGoals(user.goals)
-      : (user.goal ? normalizeGoals([user.goal]) : [{ text: "", frequency: "daily", interval: 10000 }]);
+      : (user.goal ? normalizeGoals([user.goal]) : [{ text: "", frequency: "daily", interval: 10000, deadline: null }]);
     setGoals(userGoals);
   }, [user]);
 
@@ -54,13 +55,18 @@ export default function Goal({ user, setUser, onGoalSaved }) {
         frequency: value,
         interval: selectedOption ? selectedOption.interval : 10000
       };
+    } else if (field === "deadline") {
+      newGoals[index] = {
+        ...newGoals[index],
+        deadline: value === "" || value === "no-deadline" ? null : value
+      };
     }
     setGoals(newGoals);
   };
 
   const addGoal = () => {
     if (goals.length < 3) {
-      setGoals([...goals, { text: "", frequency: "daily", interval: 10000 }]);
+      setGoals([...goals, { text: "", frequency: "daily", interval: 10000, deadline: null }]);
     }
   };
 
@@ -194,6 +200,40 @@ export default function Goal({ user, setUser, onGoalSaved }) {
                   </option>
                 ))}
               </select>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <label style={{ color: "white", textShadow: "1px 1px 2px black", fontSize: "1rem" }}>
+                Deadline:
+              </label>
+              <div style={{ display: "flex", gap: "10px", flex: 1, alignItems: "center" }}>
+                <input
+                  type="date"
+                  value={goal.deadline || ""}
+                  onChange={(e) => updateGoal(index, "deadline", e.target.value)}
+                  style={{
+                    padding: "8px",
+                    fontSize: "1rem",
+                    borderRadius: "8px",
+                    flex: 1,
+                    maxWidth: "200px",
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => updateGoal(index, "deadline", "no-deadline")}
+                  style={{
+                    padding: "8px 12px",
+                    fontSize: "0.9rem",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    backgroundColor: goal.deadline ? "rgba(255, 255, 255, 0.3)" : "rgba(255, 255, 255, 0.5)",
+                    color: "white",
+                    border: "1px solid rgba(255, 255, 255, 0.5)",
+                  }}
+                >
+                  No Deadline
+                </button>
+              </div>
             </div>
           </div>
         ))}
