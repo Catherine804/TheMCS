@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { getSheepImage, getHeartsImage } from "./sheep.jsx";
 import GoalArchive from "./GoalArchive.jsx";
+import { getStreakData, updateStreak, checkStreakStatus, getStreakMessage } from "./streakTracker.js";
 
 export default function Tracker({ user, setUser, onAddMoreGoals }) {
   // Helper to normalize goals (handle both old string format and new object format)
@@ -98,6 +99,17 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
   const [completedGoalsTotal, setCompletedGoalsTotal] = useState(
     Number(sessionStorage.getItem("completedGoalsTotal")) || 0
   );
+
+  // Streak tracking state
+  const [streakData, setStreakData] = useState(() => checkStreakStatus(user.id));
+  const [showStreakAnimation, setShowStreakAnimation] = useState(false);
+  const [streakJustUpdated, setStreakJustUpdated] = useState(false);
+
+  // Check streak status on mount
+  useEffect(() => {
+    const currentStreak = checkStreakStatus(user.id);
+    setStreakData(currentStreak);
+  }, [user.id]);
 
   // Helper to remove a goal
   const handleRemoveGoal = (goalIndex) => {
@@ -268,6 +280,22 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
           hearts: newHearts,
           previousHearts: heartsBeforeCheck // Store the state before checking
         };
+
+        // Update streak when user checks ANY goal (regardless of frequency)
+        // The streak tracks daily activity - checking any goal counts
+        const streakResult = updateStreak(user.id);
+        
+        setStreakData(streakResult.data);
+        
+        // Show animation if streak increased (first check of the day)
+        if (streakResult.increased) {
+          setShowStreakAnimation(true);
+          setStreakJustUpdated(true);
+          setTimeout(() => {
+            setShowStreakAnimation(false);
+            setStreakJustUpdated(false);
+          }, 2000);
+        }
       } else {
         // User unchecked the box - revert to previous state (before it was checked)
         newStates[goalIndex] = {
@@ -368,6 +396,178 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
               '--end-y': `${flyingSheep.endY}px`,
             }}
           />
+        </div>
+      )}
+
+      {/* Streak Counter Display - Right Middle (Thin Vertical Layout) */}
+      <div
+        style={{
+          position: "fixed",
+          top: "50%",
+          right: "10px",
+          transform: "translateY(-50%)",
+          padding: "15px 10px",
+          backgroundColor: "rgba(255, 255, 255, 0.15)",
+          backdropFilter: "blur(10px)",
+          borderRadius: "16px",
+          border: streakJustUpdated ? "3px solid #FFD700" : "2px solid rgba(255, 255, 255, 0.3)",
+          boxShadow: streakJustUpdated 
+            ? "0 0 20px rgba(255, 215, 0, 0.6), 0 4px 12px rgba(0, 0, 0, 0.3)"
+            : "0 4px 12px rgba(0, 0, 0, 0.2)",
+          transition: "all 0.3s ease",
+          zIndex: 100,
+          width: "90px",
+          animation: showStreakAnimation ? "streakPulse 0.5s ease" : "none",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "12px"
+        }}
+      >
+        {/* Current Streak */}
+        <div style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "3px",
+          width: "100%"
+        }}>
+          <span style={{ 
+            fontSize: "2rem",
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))"
+          }}>
+            🔥
+          </span>
+          <div style={{
+            color: "white",
+            textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)",
+            fontSize: "2rem",
+            fontWeight: "bold",
+            lineHeight: "1"
+          }}>
+            {streakData.currentStreak}
+          </div>
+          <div style={{
+            color: "rgba(255, 255, 255, 0.9)",
+            textShadow: "1px 1px 2px rgba(0, 0, 0, 0.5)",
+            fontSize: "0.65rem",
+            lineHeight: "1.1",
+            textAlign: "center"
+          }}>
+            Days
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div style={{
+          height: "1px",
+          width: "80%",
+          backgroundColor: "rgba(255, 255, 255, 0.3)"
+        }} />
+
+        {/* Best Streak */}
+        <div style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "2px",
+          width: "100%"
+        }}>
+          <div style={{
+            color: "rgba(255, 255, 255, 0.8)",
+            textShadow: "1px 1px 2px rgba(0, 0, 0, 0.5)",
+            fontSize: "0.6rem"
+          }}>
+            Best
+          </div>
+          <div style={{
+            color: "white",
+            textShadow: "1px 1px 2px rgba(0, 0, 0, 0.5)",
+            fontSize: "1.2rem",
+            fontWeight: "bold"
+          }}>
+            {streakData.longestStreak}
+          </div>
+          <div style={{ fontSize: "1rem" }}>🏆</div>
+        </div>
+
+        {/* Divider */}
+        <div style={{
+          height: "1px",
+          width: "80%",
+          backgroundColor: "rgba(255, 255, 255, 0.3)"
+        }} />
+
+        {/* Total Days */}
+        <div style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "2px",
+          width: "100%"
+        }}>
+          <div style={{
+            color: "rgba(255, 255, 255, 0.8)",
+            textShadow: "1px 1px 2px rgba(0, 0, 0, 0.5)",
+            fontSize: "0.6rem"
+          }}>
+            Total
+          </div>
+          <div style={{
+            color: "white",
+            textShadow: "1px 1px 2px rgba(0, 0, 0, 0.5)",
+            fontSize: "1.2rem",
+            fontWeight: "bold"
+          }}>
+            {streakData.totalDaysActive}
+          </div>
+          <div style={{ fontSize: "1rem" }}>📅</div>
+        </div>
+      </div>
+      
+      {/* Streak Update Animation */}
+      {showStreakAnimation && (
+        <div
+          style={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            zIndex: 10000,
+            pointerEvents: "none",
+            animation: "streakNotification 2s ease forwards"
+          }}
+        >
+          <div style={{
+            backgroundColor: "rgba(255, 215, 0, 0.95)",
+            padding: "30px 50px",
+            borderRadius: "20px",
+            boxShadow: "0 10px 40px rgba(255, 215, 0, 0.5)",
+            textAlign: "center"
+          }}>
+            <div style={{
+              fontSize: "3rem",
+              marginBottom: "10px"
+            }}>
+              🔥
+            </div>
+            <div style={{
+              color: "white",
+              textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)",
+              fontSize: "2rem",
+              fontWeight: "bold"
+            }}>
+              {streakData.currentStreak} Day Streak!
+            </div>
+            <div style={{
+              color: "rgba(255, 255, 255, 0.9)",
+              textShadow: "1px 1px 2px rgba(0, 0, 0, 0.5)",
+              fontSize: "1.2rem",
+              marginTop: "5px"
+            }}>
+              Keep it going! 💪
+            </div>
+          </div>
         </div>
       )}
       
@@ -786,7 +986,7 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
         )}
       </div>
       
-      {/* Add CSS for flying animation */}
+      {/* Add CSS for animations */}
       <style>{`
         @keyframes flyToBox {
           0% {
@@ -800,6 +1000,78 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
             top: var(--end-y);
             transform: translate(-50%, -50%) scale(0.2);
             opacity: 0.8;
+          }
+        }
+
+        @keyframes streakPulse {
+          0%, 100% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.05);
+          }
+        }
+
+        @keyframes streakNotification {
+          0% {
+            transform: translate(-50%, -50%) scale(0.5);
+            opacity: 0;
+          }
+          20% {
+            transform: translate(-50%, -50%) scale(1.1);
+            opacity: 1;
+          }
+          80% {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+          }
+          100% {
+            transform: translate(-50%, -50%) scale(0.8);
+            opacity: 0;
+          }
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
+        }
+
+        @keyframes starPop {
+          0% {
+            opacity: 0;
+            transform: scale(0);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.2);
+          }
+          100% {
+            opacity: 0;
+            transform: scale(0.8);
+          }
+        }
+
+        @keyframes bounce {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-10px);
           }
         }
       `}</style>

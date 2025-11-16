@@ -55,9 +55,21 @@ export default function Login({ onLogin }) {
         alt="background"
       />
 
-      <div className="content">
+      <div className="content" style={{ paddingTop: "40px" }}>
+        {/* Logo above the login form */}
+        <img
+          src="/LOGO-removebg-preview.png"
+          alt="SheepTrack Logo"
+          style={{
+            width: "500px",
+            height: "auto",
+            marginBottom: "30px",
+            filter: "drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3))"
+          }}
+        />
+        
         <div className="login-form">
-          <h1 className="login-title">Welcome to SheepTrack</h1>
+          <h1 className="login-title">Welcome to Sheep Track</h1>
           <input
             type="text"
             placeholder="Username"
