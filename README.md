@@ -1,4 +1,4 @@
-# TheMCS: The Sheep App 
+# TheMCS: The Sheep App (SheepTrack)
 
 > **Virtual Pet Productivity Tracker App**  
 Helping people accomplish their goals with a virtual pet.
