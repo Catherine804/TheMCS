@@ -75,6 +75,14 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
 
   // Helper to mark goal as completed - triggers star animation then flying sheep
   const handleMarkCompleted = (goalIndex) => {
+    // Immediately mark goal as completed in state so timers stop
+    setGoalStates(prev => ({
+      ...prev,
+      [goalIndex]: {
+        ...prev[goalIndex],
+        completed: true
+      }
+    }));
     // Trigger star animation
     setAnimatingGoal(goalIndex);
     
@@ -206,55 +214,41 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
   // Heart-loss timer with individual intervals for each goal
   useEffect(() => {
     const intervals = goals.map((goal, goalIndex) => {
-      // Use the goal's individual interval (stored in goal.interval)
       const intervalMs = goal.interval || 10000;
-      
+  
       return setInterval(() => {
         setGoalStates(prev => {
-          // Use functional update to get the latest state
           const currentState = prev[goalIndex];
-          if (!currentState) {
-            // If state doesn't exist, initialize it
-            return {
-              ...prev,
-              [goalIndex]: {
-                hearts: 3,
-                checkboxChecked: false,
-                previousHearts: 3
-              }
-            };
+          if (!currentState) return prev;
+  
+          // Skip timer if goal is completed in the goals array
+          if (goal.completed) {
+            return prev;
           }
-          
+  
           let heartsAfterLoss = currentState.hearts;
-          
-          // Lose a heart if user missed the goal and hearts > 0
-          // When hearts reach 0, sheep is dead and cannot lose more hearts
-          // The ONLY way to recover from 0 hearts is by checking the checkbox
+  
           if (!currentState.checkboxChecked && currentState.hearts > 0) {
-            heartsAfterLoss = currentState.hearts - 1;
+            heartsAfterLoss -= 1;
             alert(`You missed your goal "${goal.text}"! Heart lost.`);
           }
-          // If hearts are already 0, they stay at 0 (dead) until checkbox is checked
-          
-          // Always reset checkbox for next cycle and update state with new hearts
+  
           return {
             ...prev,
             [goalIndex]: {
               ...currentState,
               hearts: heartsAfterLoss,
               checkboxChecked: false,
-              previousHearts: heartsAfterLoss // Update previousHearts to current state
+              previousHearts: heartsAfterLoss
             }
           };
         });
-      }, intervalMs); // Use individual interval for each goal
+      }, intervalMs);
     });
   
-    return () => {
-      intervals.forEach(interval => clearInterval(interval));
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [goals.length]);
+    return () => intervals.forEach(interval => clearInterval(interval));
+  }, [goals]); // Re-run whenever goals array changes
+
   
 
   if (goals.length === 0) {
