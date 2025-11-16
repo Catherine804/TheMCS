@@ -37,6 +37,16 @@
   margin-bottom: 20px;
 }
 
+.scrollable-goals {
+  max-height: 70vh;       /* Adjust height as needed */
+  width: 100%;            /* Fill the parent width */
+  overflow-y: auto;       /* Vertical scrolling */
+  overflow-x: hidden;     /* Hide horizontal scrolling */
+  padding: 0 10px;        /* Add padding to avoid clipping content */
+  box-sizing: border-box; /* Include padding in width calculation */
+  margin-bottom: 20px;    /* Space before bottom buttons */
+}
+
 /* Sheep */
 .sheep {
   width: 300px;
