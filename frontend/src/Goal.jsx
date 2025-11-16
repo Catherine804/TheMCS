@@ -210,6 +210,7 @@ export default function Goal({ user, setUser, onGoalSaved }) {
                   type="date"
                   value={goal.deadline || ""}
                   onChange={(e) => updateGoal(index, "deadline", e.target.value)}
+                  placeholder="Select deadline (optional)"
                   style={{
                     padding: "8px",
                     fontSize: "1rem",
@@ -218,23 +219,43 @@ export default function Goal({ user, setUser, onGoalSaved }) {
                     maxWidth: "200px",
                   }}
                 />
-                <button
-                  type="button"
-                  onClick={() => updateGoal(index, "deadline", "no-deadline")}
-                  style={{
-                    padding: "8px 12px",
-                    fontSize: "0.9rem",
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    backgroundColor: goal.deadline ? "rgba(255, 255, 255, 0.3)" : "rgba(255, 255, 255, 0.5)",
-                    color: "white",
-                    border: "1px solid rgba(255, 255, 255, 0.5)",
-                  }}
-                >
-                  No Deadline
-                </button>
+                {goal.deadline ? (
+                  <button
+                    type="button"
+                    onClick={() => updateGoal(index, "deadline", "no-deadline")}
+                    style={{
+                      padding: "8px 12px",
+                      fontSize: "0.9rem",
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      backgroundColor: "#ff4444",
+                      color: "white",
+                      border: "none",
+                    }}
+                  >
+                    Remove Deadline
+                  </button>
+                ) : (
+                  <div style={{ 
+                    fontSize: "0.85rem", 
+                    color: "rgba(255, 255, 255, 0.7)", 
+                    textShadow: "1px 1px 2px black" 
+                  }}>
+                    (Optional)
+                  </div>
+                )}
               </div>
             </div>
+            {goal.deadline && (
+              <div style={{ 
+                fontSize: "0.85rem", 
+                color: "rgba(255, 255, 255, 0.8)", 
+                textShadow: "1px 1px 2px black",
+                marginLeft: "10px"
+              }}>
+                Deadline set: {new Date(goal.deadline).toLocaleDateString()}
+              </div>
+            )}
           </div>
         ))}
 

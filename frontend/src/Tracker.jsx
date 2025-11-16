@@ -1,5 +1,6 @@
 // Tracker.jsx
 import { useState, useEffect } from "react";
+import { getSheepImage, getHeartsImage } from "./sheep.jsx";
 
 export default function Tracker({ user, setUser, onAddMoreGoals }) {
   // Helper to normalize goals (handle both old string format and new object format)
@@ -40,43 +41,25 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
     return initial;
   });
 
-  // Update goal states when goals change
+  // Update goal states when goals change (only when goals.length changes)
   useEffect(() => {
-    const newStates = {};
-    goals.forEach((_, index) => {
-      if (goalStates[index]) {
-        newStates[index] = goalStates[index];
-      } else {
-        newStates[index] = {
-          hearts: 3,
-          checkboxChecked: false,
-          previousHearts: 3
-        };
-      }
+    setGoalStates(prev => {
+      const newStates = { ...prev };
+      // Only initialize new goals, don't reset existing ones
+      goals.forEach((_, index) => {
+        if (!newStates[index]) {
+          newStates[index] = {
+            hearts: 3,
+            checkboxChecked: false,
+            previousHearts: 3
+          };
+        }
+      });
+      return newStates;
     });
-    setGoalStates(newStates);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goals.length]);
 
-  const getHeartsImage = (hearts) => {
-    switch (hearts) {
-      case 3: return "/hearts_3hearts-removebg-preview.png";
-      case 2: return "/hearts_2hearts-removebg-preview.png";
-      case 1: return "/hearts_1heart-removebg-preview.png";
-      case 0: return "/hearts_0hearts-removebg-preview.png";
-      default: return "/hearts_3hearts-removebg-preview.png";
-    }
-  };
-
-  const getSheepImage = (hearts) => {
-    switch (hearts) {
-      case 3: return "/sheep1_happy-removebg-preview.png";
-      case 2: return "/sheep2_annoyed-removebg-preview.png";
-      case 1: return "/sheep3_sick-removebg-preview.png";
-      case 0: return "/sheep4_dead-removebg-preview.png";
-      default: return "/sheep1_happy-removebg-preview.png";
-    }
-  };
     
   const handleCheckbox = (goalIndex, checked) => {
     setGoalStates(prev => {
@@ -88,22 +71,22 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
         // Store current hearts as previousHearts before potentially adding a heart
         const heartsBeforeCheck = currentState.hearts;
         
+        // Restore 1 heart if hearts < 3 (this includes recovering from 0 hearts)
+        // This is the ONLY way to recover from 0 hearts/dead state
+        const newHearts = currentState.hearts < 3 ? currentState.hearts + 1 : currentState.hearts;
+        
         newStates[goalIndex] = {
           ...currentState,
           checkboxChecked: true,
+          hearts: newHearts,
           previousHearts: heartsBeforeCheck // Store the state before checking
         };
-
-        // Restore 1 heart if hearts < 3
-        if (currentState.hearts < 3) {
-          newStates[goalIndex].hearts = currentState.hearts + 1;
-        }
       } else {
         // User unchecked the box - revert to previous state (before it was checked)
         newStates[goalIndex] = {
           ...currentState,
           checkboxChecked: false,
-          hearts: currentState.previousHearts || currentState.hearts // Restore previous hearts
+          hearts: currentState.previousHearts !== undefined ? currentState.previousHearts : currentState.hearts // Restore previous hearts
         };
       }
 
@@ -120,30 +103,40 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
       
       return setInterval(() => {
         setGoalStates(prev => {
-          const newStates = { ...prev };
-          const currentState = newStates[goalIndex] || { hearts: 3, checkboxChecked: false, previousHearts: 3 };
-          
-          if (!currentState.checkboxChecked && currentState.hearts > 0) {
-            // Lose a heart if user missed the goal
-            const newHearts = currentState.hearts - 1;
-            newStates[goalIndex] = {
-              ...currentState,
-              hearts: newHearts,
-              previousHearts: newHearts // Update previousHearts to current hearts
+          // Use functional update to get the latest state
+          const currentState = prev[goalIndex];
+          if (!currentState) {
+            // If state doesn't exist, initialize it
+            return {
+              ...prev,
+              [goalIndex]: {
+                hearts: 3,
+                checkboxChecked: false,
+                previousHearts: 3
+              }
             };
-            alert(`You missed your goal "${goal.text}"! Heart lost.`);
           }
           
-          // Always reset checkbox for next cycle
-          // Also update previousHearts to current hearts so unchecking works correctly
-          const finalHearts = newStates[goalIndex]?.hearts || currentState.hearts;
-          newStates[goalIndex] = {
-            ...(newStates[goalIndex] || { hearts: 3, checkboxChecked: false, previousHearts: 3 }),
-            checkboxChecked: false,
-            previousHearts: finalHearts // Update previousHearts to current state
-          };
+          let heartsAfterLoss = currentState.hearts;
           
-          return newStates;
+          // Lose a heart if user missed the goal and hearts > 0
+          // When hearts reach 0, sheep is dead and cannot lose more hearts
+          // The ONLY way to recover from 0 hearts is by checking the checkbox
+          if (!currentState.checkboxChecked && currentState.hearts > 0) {
+            heartsAfterLoss = currentState.hearts - 1;
+            alert(`You missed your goal "${goal.text}"! Heart lost.`);
+          }
+          // If hearts are already 0, they stay at 0 (dead) until checkbox is checked
+          
+          // Always reset checkbox for next cycle and update state with new hearts
+          return {
+            ...prev,
+            [goalIndex]: {
+              hearts: heartsAfterLoss,
+              checkboxChecked: false,
+              previousHearts: heartsAfterLoss // Update previousHearts to current state
+            }
+          };
         });
       }, intervalMs); // Use individual interval for each goal
     });
@@ -250,7 +243,7 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
           flexWrap: "wrap"
         }}>
           {goals.map((goal, index) => {
-            const goalHearts = goalStates[index]?.hearts || 3;
+            const goalHearts = goalStates[index]?.hearts !== undefined ? goalStates[index].hearts : 3;
             return (
               <div
                 key={index}
@@ -308,11 +301,11 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
                   style={{ width: "120px" }}
                 />
 
-                {/* Sheep image for this goal */}
+                {/* Sheep image for this goal - color based on goal position */}
                 <img
-                  src={getSheepImage(goalHearts)}
+                  src={getSheepImage(index, goalHearts)}
                   className="sheep"
-                  alt={`sheep for ${goal}`}
+                  alt={`sheep for ${goal.text}`}
                   style={{ width: "180px" }}
                 />
 

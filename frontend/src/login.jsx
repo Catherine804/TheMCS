@@ -6,6 +6,7 @@ import "./login.css";   // login-specific form styles
 
 export default function Login({ onLogin }) {
   const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   const handleLogin = async () => {
@@ -14,6 +15,7 @@ export default function Login({ onLogin }) {
     try {
       const res = await axios.post("http://localhost:5000/auth", {
         user_name: username,
+        password: password,
       });
 
       const user = res.data;
@@ -58,6 +60,13 @@ export default function Login({ onLogin }) {
             placeholder="Enter your username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+          />
+          <input
+            type="password"
+            placeholder="Enter your password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleLogin()}
           />
           <button onClick={handleLogin}>Login</button>
