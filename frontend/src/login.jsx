@@ -57,23 +57,27 @@ export default function Login({ onLogin }) {
 
       <div className="content">
         <div className="login-form">
-          <h1>Login</h1>
+          <h1 className="login-title">Welcome to SheepTrack</h1>
           <input
             type="text"
-            placeholder="Enter your username"
+            placeholder="Username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+            className="login-input"
           />
           <input
             type="password"
-            placeholder="Enter your password"
+            placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+            className="login-input"
           />
-          <button onClick={handleLogin}>Login</button>
-          {error && <p>{error}</p>}
+          <button onClick={handleLogin} className="login-button">
+            Login
+          </button>
+          {error && <p className="login-error">{error}</p>}
         </div>
       </div>
     </div>

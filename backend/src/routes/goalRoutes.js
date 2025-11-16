@@ -7,33 +7,20 @@ const router = express.Router();
 router.post("/", async (req, res) => {
   const { userId, title, description, frequency, deadline } = req.body;
 
-  if (!userId || !title || !frequency || !deadline) {
-    return res.status(400).json({ error: "Missing required fields" });
+  if (!userId || !title || !frequency) {
+    return res.status(400).json({ error: "userId, title, and frequency are required" });
   }
 
   try {
-    // Check if user already has 3 active goals
-    const activeGoalsCount = await prisma.goal.count({
-      where: { 
-        userId: parseInt(userId), 
-        status: "active" 
-      }
-    });
-
-    if (activeGoalsCount >= 3) {
-      return res.status(400).json({ 
-        error: "You already have 3 active goals. Complete one first!" 
-      });
-    }
-
-    // Create the goal
     const goal = await prisma.goal.create({
       data: {
         title,
         description: description || "",
         frequency,
-        deadline: new Date(deadline),
-        userId: parseInt(userId)
+        deadline: deadline ? new Date(deadline) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        userId: Number(userId),
+        status: "active",
+        progressStatus: "in_progress"
       }
     });
 
@@ -50,8 +37,7 @@ router.get("/user/:userId", async (req, res) => {
 
   try {
     const goals = await prisma.goal.findMany({
-      where: { userId: parseInt(userId) },
-      orderBy: { createdAt: 'desc' }
+      where: { userId: Number(userId) }
     });
 
     res.json(goals);
@@ -61,29 +47,22 @@ router.get("/user/:userId", async (req, res) => {
   }
 });
 
-// Update goal status (for check-ins)
-router.put("/:goalId", async (req, res) => {
-  const { goalId } = req.params;
-  const { progressStatus, status } = req.body;
+// Update a goal
+router.put("/:id", async (req, res) => {
+  const { id } = req.params;
+  const { title, description, frequency, deadline, status, progressStatus } = req.body;
 
   try {
-    const updateData = {
-      lastCheckIn: new Date()
-    };
-
-    if (progressStatus) {
-      updateData.progressStatus = progressStatus;
-    }
-
-    if (status) {
-      updateData.status = status;
-      if (status === "completed") {
-        updateData.completedAt = new Date();
-      }
-    }
+    const updateData = {};
+    if (title !== undefined) updateData.title = title;
+    if (description !== undefined) updateData.description = description;
+    if (frequency !== undefined) updateData.frequency = frequency;
+    if (deadline !== undefined) updateData.deadline = deadline ? new Date(deadline) : null;
+    if (status !== undefined) updateData.status = status;
+    if (progressStatus !== undefined) updateData.progressStatus = progressStatus;
 
     const goal = await prisma.goal.update({
-      where: { id: parseInt(goalId) },
+      where: { id: Number(id) },
       data: updateData
     });
 
@@ -95,12 +74,12 @@ router.put("/:goalId", async (req, res) => {
 });
 
 // Delete a goal
-router.delete("/:goalId", async (req, res) => {
-  const { goalId } = req.params;
+router.delete("/:id", async (req, res) => {
+  const { id } = req.params;
 
   try {
     await prisma.goal.delete({
-      where: { id: parseInt(goalId) }
+      where: { id: Number(id) }
     });
 
     res.json({ message: "Goal deleted successfully" });
@@ -111,4 +90,3 @@ router.delete("/:goalId", async (req, res) => {
 });
 
 export default router;
-

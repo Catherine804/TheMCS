@@ -32,20 +32,56 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
   
   // Track hearts and checkbox states for each goal
   const [goalStates, setGoalStates] = useState(() => {
+    // Try to load saved goal states from sessionStorage
+    const savedStates = sessionStorage.getItem(`goalStates_${user.id}`);
+    
     // Initialize state for each goal
     const initial = {};
+    
+    if (savedStates) {
+      try {
+        const parsed = JSON.parse(savedStates);
+        // Restore saved states for existing goals
+        goals.forEach((goal, index) => {
+          if (parsed[index] !== undefined) {
+            // Use saved state for this goal
+            initial[index] = parsed[index];
+          } else {
+            // New goal - initialize with default values
+            const isCompleted = goal.completed || false;
+            initial[index] = {
+              hearts: 3,
+              checkboxChecked: false,
+              previousHearts: 3,
+              completed: isCompleted
+            };
+          }
+        });
+        return initial;
+      } catch (err) {
+        console.error("Failed to parse saved goal states:", err);
+      }
+    }
+    
+    // First time or if saved data is invalid - initialize all goals
     goals.forEach((_, index) => {
-      // Check if goal was previously completed (from localStorage or user data)
       const isCompleted = goals[index].completed || false;
       initial[index] = {
         hearts: 3,
         checkboxChecked: false,
-        previousHearts: 3, // Track hearts before checking to allow reverting
-        completed: isCompleted // Track if goal is marked as completed
+        previousHearts: 3,
+        completed: isCompleted
       };
     });
     return initial;
   });
+
+  // Save goal states to sessionStorage whenever they change
+  useEffect(() => {
+    if (Object.keys(goalStates).length > 0) {
+      sessionStorage.setItem(`goalStates_${user.id}`, JSON.stringify(goalStates));
+    }
+  }, [goalStates, user.id]);
 
   // Track which goal is currently showing completion animation
   const [animatingGoal, setAnimatingGoal] = useState(null);
@@ -60,8 +96,40 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
   const [displayedCount, setDisplayedCount] = useState(0);
 
   const [completedGoalsTotal, setCompletedGoalsTotal] = useState(
-    Number(localStorage.getItem("completedGoalsTotal")) || 0
+    Number(sessionStorage.getItem("completedGoalsTotal")) || 0
   );
+
+  // Helper to remove a goal
+  const handleRemoveGoal = (goalIndex) => {
+    if (!confirm(`Are you sure you want to remove "${goals[goalIndex].text}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    // Remove goal from goals array
+    const updatedGoals = goals.filter((_, idx) => idx !== goalIndex);
+    
+    // Update user state
+    const updatedUser = {
+      ...user,
+      goals: updatedGoals
+    };
+    setUser(updatedUser);
+    sessionStorage.setItem("user", JSON.stringify(updatedUser));
+
+    // Remove goal state and reindex remaining goals
+    setGoalStates(prev => {
+      const newStates = {};
+      let newIndex = 0;
+      Object.keys(prev).forEach(key => {
+        const oldIndex = parseInt(key);
+        if (oldIndex !== goalIndex) {
+          newStates[newIndex] = prev[oldIndex];
+          newIndex++;
+        }
+      });
+      return newStates;
+    });
+  };
 
   // Helper to check if deadline has passed
   const isDeadlinePassed = (deadline) => {
@@ -128,7 +196,7 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
             return newStates;
           });
 
-          // Update user goals to mark as completed and save to localStorage
+          // Update user goals to mark as completed and save to sessionStorage
           const updatedGoals = goals.map((goal, idx) => {
             if (idx === goalIndex) {
               return { ...goal, completed: true, completedDate: new Date().toISOString() };
@@ -141,7 +209,7 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
             goals: updatedGoals
           };
           setUser(updatedUser);
-          localStorage.setItem("user", JSON.stringify(updatedUser));
+          sessionStorage.setItem("user", JSON.stringify(updatedUser));
         }, 1500);
       }
     }, 2000);
@@ -162,12 +230,15 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
     setGoalStates(prev => {
       const newStates = { ...prev };
       // Only initialize new goals, don't reset existing ones
-      goals.forEach((_, index) => {
+      goals.forEach((goal, index) => {
         if (!newStates[index]) {
+          // This is a new goal that doesn't have a state yet
+          const isCompleted = goal.completed || false;
           newStates[index] = {
             hearts: 3,
             checkboxChecked: false,
-            previousHearts: 3
+            previousHearts: 3,
+            completed: isCompleted
           };
         }
       });
@@ -230,7 +301,6 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
   
           if (!currentState.checkboxChecked && currentState.hearts > 0) {
             heartsAfterLoss -= 1;
-            alert(`You missed your goal "${goal.text}"! Heart lost.`);
           }
   
           return {
@@ -252,14 +322,9 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
   
 
   if (goals.length === 0) {
-    return (
-      <div className="content">
-        <h1 className="goal-title">No goals set</h1>
-        <p style={{ color: "white", textShadow: "1px 1px 2px black" }}>
-          Please set your goals first
-        </p>
-      </div>
-    );
+    // If no goals, redirect to goal setting page
+    onAddMoreGoals();
+    return null;
   }
   
   // Check if all goals are completed
@@ -316,8 +381,8 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
               <div
                 id="completed-goals-box"
                 style={{
-                  position: "absolute",
-                  top: "15px",
+                  position: "fixed",
+                  bottom: "15px",
                   left: "15px",
                   padding: "10px 15px",
                   backgroundColor: "transparent",
@@ -362,56 +427,73 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
                   position: "absolute",
                   top: "10px",
                   right: "10px",
-                  padding: "15px 20px",
-                  backgroundColor: "rgba(255, 255, 255, 0.15)",
-                  borderRadius: "12px",
-                  backdropFilter: "blur(5px)",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "10px",
-                  border: "2px dashed rgba(255, 255, 255, 0.5)",
                   cursor: "pointer",
                   transition: "all 0.3s ease",
-                  minWidth: "150px",
                 }}
                 onClick={onAddMoreGoals}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
-                  e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.8)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.15)";
-                  e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.5)";
-                }}
               >
-                <div style={{ 
-                  fontSize: "2rem", 
-                  color: "white", 
-                  textShadow: "1px 1px 2px black" 
+                <svg width="200" height="100" viewBox="0 0 200 100" style={{ filter: "drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2))" }}>
+                  {/* Cloud shape using path - wider and shorter */}
+                  <path
+                    d="M 30,50 Q 30,35 45,35 Q 45,20 65,20 Q 85,20 95,28 Q 115,18 135,30 Q 160,30 170,45 Q 175,45 175,52 Q 175,65 160,65 L 45,65 Q 30,65 30,50 Z"
+                    fill="rgba(255, 255, 255, 0.8)"
+                    stroke="none"
+                    style={{ transition: "all 0.3s ease" }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.fill = "rgba(255, 255, 255, 0.95)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.fill = "rgba(255, 255, 255, 0.8)";
+                    }}
+                  />
+                </svg>
+                
+                {/* Content overlay */}
+                <div style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  pointerEvents: "none",
+                  width: "80%"
                 }}>
-                  +
+                  <div style={{ 
+                    fontSize: "1.8rem", 
+                    color: "#5A9FD4", 
+                    textShadow: "1px 1px 2px rgba(0, 0, 0, 0.2)",
+                    lineHeight: "1"
+                  }}>
+                    +
+                  </div>
+                  <div style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0px"
+                  }}>
+                    <span style={{ 
+                      color: "#5A9FD4", 
+                      textShadow: "1px 1px 2px rgba(0, 0, 0, 0.1)",
+                      fontSize: "0.85rem",
+                      fontWeight: "bold",
+                      lineHeight: "1.1"
+                    }}>
+                      Add More
+                    </span>
+                    <span style={{ 
+                      color: "#7AB8E8", 
+                      textShadow: "1px 1px 2px rgba(0, 0, 0, 0.1)",
+                      fontSize: "0.7rem",
+                      lineHeight: "1.1"
+                    }}>
+                      ({remainingGoals} available)
+                    </span>
+                  </div>
                 </div>
-                <h3 style={{ 
-                  color: "white", 
-                  textShadow: "1px 1px 2px black",
-                  fontSize: "1rem",
-                  textAlign: "center",
-                  fontWeight: "bold",
-                  margin: 0
-                }}>
-                  Add More Goals?
-                </h3>
-                <p style={{ 
-                  color: "white", 
-                  textShadow: "1px 1px 2px black",
-                  fontSize: "0.8rem",
-                  textAlign: "center",
-                  margin: 0
-                }}>
-                  {remainingGoals} more available
-                </p>
               </div>
             )}
 
@@ -452,8 +534,39 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
                       flexDirection: "column",
                       alignItems: "center",
                       gap: "8px",
+                      position: "relative"
                     }}
                   >
+                    {/* Remove button in top-right corner */}
+                    <button
+                      onClick={() => handleRemoveGoal(index)}
+                      style={{
+                        position: "absolute",
+                        top: "10px",
+                        right: "10px",
+                        padding: "5px 10px",
+                        fontSize: "0.85rem",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        backgroundColor: "#ff4444",
+                        color: "white",
+                        border: "none",
+                        fontWeight: "bold",
+                        transition: "all 0.2s ease",
+                        zIndex: 10
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = "#cc0000";
+                        e.currentTarget.style.transform = "scale(1.05)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "#ff4444";
+                        e.currentTarget.style.transform = "scale(1)";
+                      }}
+                    >
+                      Remove
+                    </button>
+
                     {/* Goal name or number at the top */}
                     <h3 style={{ 
                       color: "white", 
@@ -564,22 +677,24 @@ export default function Tracker({ user, setUser, onAddMoreGoals }) {
                       I worked on this goal today
                     </label>
 
-                    {/* Mark as Completed button */}
+                    {/* Mark as Completed button - disabled if sheep is dead */}
                     <button
                       onClick={() => handleMarkCompleted(index)}
+                      disabled={goalHearts === 0}
                       style={{
                         marginTop: "10px",
                         padding: "8px 16px",
                         fontSize: "0.9rem",
                         borderRadius: "8px",
-                        cursor: "pointer",
-                        backgroundColor: "#4CAF50",
-                        color: "white",
+                        cursor: goalHearts === 0 ? "not-allowed" : "pointer",
+                        backgroundColor: goalHearts === 0 ? "#cccccc" : "#4CAF50",
+                        color: goalHearts === 0 ? "#666666" : "white",
                         border: "none",
-                        fontWeight: "bold"
+                        fontWeight: "bold",
+                        opacity: goalHearts === 0 ? 0.5 : 1
                       }}
                     >
-                      ✓ Mark as Completed
+                      {goalHearts === 0 ? "❌ Cannot Complete (Sheep Dead)" : "✓ Mark as Completed"}
                     </button>
                   </div>
                 );

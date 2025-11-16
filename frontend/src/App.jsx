@@ -7,9 +7,9 @@ export default function App({ user: initialUser }) {
   const [user, setUser] = useState(initialUser);
   const [currentPage, setCurrentPage] = useState("goal"); // "goal" or "tracker"
 
-  // Load user from localStorage on mount
+  // Load user from sessionStorage on mount
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
+    const savedUser = sessionStorage.getItem("user");
     if (savedUser) {
       try {
         const parsedUser = JSON.parse(savedUser);
@@ -24,10 +24,10 @@ export default function App({ user: initialUser }) {
     }
   }, []);
 
-  // Sync user state with localStorage
+  // Sync user state with sessionStorage
   useEffect(() => {
     if (user) {
-      localStorage.setItem("user", JSON.stringify(user));
+      sessionStorage.setItem("user", JSON.stringify(user));
     }
   }, [user]);
 
